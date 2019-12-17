@@ -1,4 +1,4 @@
 *.swp
 TODO
-/template-operator
+/dns-network-policy-operator
 !vendor/**

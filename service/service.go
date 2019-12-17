@@ -15,10 +15,10 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/client-go/rest"
 
-	"github.com/giantswarm/template-operator/flag"
-	"github.com/giantswarm/template-operator/pkg/project"
-	"github.com/giantswarm/template-operator/service/collector"
-	"github.com/giantswarm/template-operator/service/controller"
+	"github.com/giantswarm/dns-network-policy-operator/flag"
+	"github.com/giantswarm/dns-network-policy-operator/pkg/project"
+	"github.com/giantswarm/dns-network-policy-operator/service/collector"
+	"github.com/giantswarm/dns-network-policy-operator/service/controller"
 )
 
 // Config represents the configuration used to create a new service.
