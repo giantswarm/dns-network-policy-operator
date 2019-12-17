@@ -6,6 +6,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/giantswarm/apiextensions/pkg/apis/example/v1alpha1"
 	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/k8sclient/k8srestconfig"
 	"github.com/giantswarm/microendpoint/service/version"
@@ -32,9 +33,9 @@ type Config struct {
 type Service struct {
 	Version *version.Service
 
-	bootOnce          sync.Once
-	todoController    *controller.TODO
-	operatorCollector *collector.Set
+	bootOnce                   sync.Once
+	dnsNetworkPolicyController *controller.DNSNetworkPolicy
+	operatorCollector          *collector.Set
 }
 
 // New creates a new configured service object.
@@ -85,10 +86,9 @@ func New(config Config) (*Service, error) {
 	{
 		c := k8sclient.ClientsConfig{
 			Logger: config.Logger,
-			// TODO: If you are watching a new CRD, include here the AddToScheme function from apiextensions.
-			// SchemeBuilder: k8sclient.SchemeBuilder{
-			//     corev1alpha1.AddToScheme,
-			// },
+			SchemeBuilder: k8sclient.SchemeBuilder{
+				v1alpha1.AddToScheme,
+			},
 			RestConfig: restConfig,
 		}
 
@@ -98,15 +98,15 @@ func New(config Config) (*Service, error) {
 		}
 	}
 
-	var todoController *controller.TODO
+	var dnsNetworkPolicyController *controller.DNSNetworkPolicy
 	{
 
-		c := controller.TODOConfig{
+		c := controller.DNSNetworkPolicyConfig{
 			K8sClient: k8sClient,
 			Logger:    config.Logger,
 		}
 
-		todoController, err = controller.NewTODO(c)
+		dnsNetworkPolicyController, err = controller.NewDNSNetworkPolicy(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
@@ -145,9 +145,9 @@ func New(config Config) (*Service, error) {
 	s := &Service{
 		Version: versionService,
 
-		bootOnce:          sync.Once{},
-		todoController:    todoController,
-		operatorCollector: operatorCollector,
+		bootOnce:                   sync.Once{},
+		dnsNetworkPolicyController: dnsNetworkPolicyController,
+		atorCollector:              operatorCollector,
 	}
 
 	return s, nil
@@ -157,6 +157,6 @@ func (s *Service) Boot(ctx context.Context) {
 	s.bootOnce.Do(func() {
 		go s.operatorCollector.Boot(ctx)
 
-		go s.todoController.Boot(ctx)
+		go s.dnsNetworkPolicyController.Boot(ctx)
 	})
 }
