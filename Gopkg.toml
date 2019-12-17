@@ -45,7 +45,7 @@
   name = "github.com/giantswarm/operatorkit"
   revision = "master"
 
-[[constraint]]
+[[override]]
   name = "k8s.io/api"
   version = "kubernetes-1.16.3"
 
@@ -69,7 +69,9 @@
 source = "gopkg.in/fsnotify/fsnotify.v1"
 name = "gopkg.in/fsnotify.v1"
 
-
+[[override]]
+  branch = "add_dns_network_policy"
+  name = "github.com/giantswarm/apiextensions"
 
 
 [prune]
