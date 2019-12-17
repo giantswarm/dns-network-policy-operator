@@ -147,7 +147,7 @@ func New(config Config) (*Service, error) {
 
 		bootOnce:                   sync.Once{},
 		dnsNetworkPolicyController: dnsNetworkPolicyController,
-		atorCollector:              operatorCollector,
+		operatorCollector:          operatorCollector,
 	}
 
 	return s, nil

@@ -12,7 +12,7 @@ import (
 	"github.com/giantswarm/dns-network-policy-operator/service/controller/resource/test"
 )
 
-type dnsNetworkPolicyResourceSetConfig struct {
+type DNSNetworkPolicyResourceSetConfig struct {
 	K8sClient k8sclient.Interface
 	Logger    micrologger.Logger
 }
