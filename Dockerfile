@@ -2,6 +2,6 @@ FROM alpine:3.10
 
 RUN apk add --no-cache ca-certificates
 
-ADD ./template-operator /template-operator
+ADD ./dns-network-policy-operator /dns-network-policy-operator
 
-ENTRYPOINT ["/template-operator"]
+ENTRYPOINT ["/dns-network-policy-operator"]

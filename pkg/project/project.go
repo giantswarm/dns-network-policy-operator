@@ -2,10 +2,10 @@ package project
 
 var (
 	bundleVersion = "0.0.1"
-	description   = "The template-operator does something."
+	description   = "The dns-network-policy-operator does something."
 	gitSHA        = "n/a"
-	name          = "template-operator"
-	source        = "https://github.com/giantswarm/template-operator"
+	name          = "dns-network-policy-operator"
+	source        = "https://github.com/giantswarm/dns-network-policy-operator"
 	version       = "n/a"
 )
 
