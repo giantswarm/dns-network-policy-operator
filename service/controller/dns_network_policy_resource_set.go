@@ -9,7 +9,7 @@ import (
 	"github.com/giantswarm/operatorkit/resource/wrapper/metricsresource"
 	"github.com/giantswarm/operatorkit/resource/wrapper/retryresource"
 
-	"github.com/giantswarm/dns-network-policy-operator/service/controller/resource/test"
+	dnp "github.com/giantswarm/dns-network-policy-operator/service/controller/resource/dns-network-policy"
 )
 
 type DNSNetworkPolicyResourceSetConfig struct {
@@ -20,21 +20,21 @@ type DNSNetworkPolicyResourceSetConfig struct {
 func newDNSNetworkPolicyResourceSet(config DNSNetworkPolicyResourceSetConfig) (*controller.ResourceSet, error) {
 	var err error
 
-	var testResource resource.Interface
+	var dnpResource resource.Interface
 	{
-		c := test.Config{
+		c := dnp.Config{
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
 		}
 
-		testResource, err = test.New(c)
+		dnpResource, err = dnp.New(c)
 		if err != nil {
 			return nil, microerror.Mask(err)
 		}
 	}
 
 	resources := []resource.Interface{
-		testResource,
+		dnpResource,
 	}
 
 	{
