@@ -1,9 +1,9 @@
-package test
+package dnsnetworkpolicy
 
 import (
 	"context"
-	"fmt"
 	"net"
+	"sync"
 
 	"github.com/giantswarm/microerror"
 	networkingV1 "k8s.io/api/networking/v1"
@@ -35,19 +35,11 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 
 	//create new effective policy if it doesn't exist
 	effectiveNetworkPolicyName := key.EffectiveNetworkPolicyName(targetNetworkPolicy.Name)
-	effectiveNetworkPolicy, err := r.k8sClient.NetworkingV1().NetworkPolicies(ns).Get(effectiveNetworkPolicyName, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		effectiveNetworkPolicy := targetNetworkPolicy.DeepCopy()
-		effectiveNetworkPolicy.ObjectMeta.ResourceVersion = ""
-		effectiveNetworkPolicy.Name = effectiveNetworkPolicyName
-
-		_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Create(effectiveNetworkPolicy)
-		if err != nil {
-			return microerror.Mask(err)
-		}
-	} else if err != nil {
-		return microerror.Mask(err)
-	}
+	effectiveNetworkPolicy := targetNetworkPolicy.DeepCopy()
+	effectiveNetworkPolicy.ObjectMeta.ResourceVersion = ""
+	effectiveNetworkPolicy.ObjectMeta.UID = ""
+	effectiveNetworkPolicy.ObjectMeta.Name = effectiveNetworkPolicyName
+	delete(effectiveNetworkPolicy.Spec.PodSelector.MatchLabels, key.PodSelectorMatchLabelRandom)
 
 	// Add annotation to the target network policy
 	if effectiveNetworkPolicy.ObjectMeta.Annotations == nil {
@@ -70,30 +62,20 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 	}
 
 	// Resolve domains into IP addresses
-	var desiredIPs []net.IP
-	{
-		for _, domain := range cr.Spec.Domains {
-			currentIPs, err := net.LookupIP(domain)
-			if err != nil {
-				r.logger.LogCtx(ctx, "level", "error", "message", err.Error())
-				continue
-			}
-			desiredIPs = append(desiredIPs, currentIPs...)
-		}
-	}
+	ipChan := make(chan net.IP, 1)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go resolveDomains(cr.Spec.Domains, &wg, ipChan)
+	wg.Add(1)
+	uniqueIPs := collectResult(&wg, ipChan)
+	wg.Wait()
 
 	var desiredNetworkPolicyPeers []networkingV1.NetworkPolicyPeer
 	{
-		for _, ip := range desiredIPs {
-			var ipType string
-			if ip.To4() != nil {
-				ipType = "32"
-			} else {
-				ipType = "128"
-			}
+		for _, cidr := range uniqueIPs {
 			desiredNetworkPolicyPeer := networkingV1.NetworkPolicyPeer{
 				IPBlock: &networkingV1.IPBlock{
-					CIDR: fmt.Sprintf("%s/%s", ip.String(), ipType),
+					CIDR: cidr,
 				},
 			}
 			desiredNetworkPolicyPeers = append(desiredNetworkPolicyPeers, desiredNetworkPolicyPeer)
@@ -108,6 +90,16 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 		targetNetworkPolicy.Spec.PodSelector.MatchLabels = make(map[string]string)
 	}
 	targetNetworkPolicy.Spec.PodSelector.MatchLabels[key.PodSelectorMatchLabelRandom] = key.RandomLabel()
+
+	_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Get(effectiveNetworkPolicyName, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Create(effectiveNetworkPolicy)
+		if err != nil {
+			return microerror.Mask(err)
+		}
+	} else if err != nil {
+		return microerror.Mask(err)
+	}
 
 	_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Update(effectiveNetworkPolicy)
 	if err != nil {
