@@ -1,4 +1,4 @@
-package test
+package dnsnetworkpolicy
 
 import (
 	"github.com/giantswarm/microerror"
