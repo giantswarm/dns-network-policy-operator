@@ -1,9 +1,9 @@
 apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: {{ .Values.name }}
+  name: {{tpl .Values.resource.default.name  . }}
   labels:
-    app: {{ .Values.name }}
+    app: {{tpl .Values.resource.default.name  . }}
     giantswarm.io/service-type: "managed"
 spec:
   privileged: false
