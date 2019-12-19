@@ -4,10 +4,12 @@ import (
 	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
+
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
-	Name = "todo"
+	Name = "dns-network-policy"
 )
 
 type Config struct {
@@ -16,16 +18,21 @@ type Config struct {
 }
 
 type Resource struct {
-	logger micrologger.Logger
+	k8sClient kubernetes.Interface
+	logger    micrologger.Logger
 }
 
 func New(config Config) (*Resource, error) {
+	if config.K8sClient == nil {
+		return nil, microerror.Maskf(invalidConfigError, "%T.K8sClient must not be empty", config)
+	}
 	if config.Logger == nil {
 		return nil, microerror.Maskf(invalidConfigError, "%T.Logger must not be empty", config)
 	}
 
 	r := &Resource{
-		logger: config.Logger,
+		k8sClient: config.K8sClient.K8sClient(),
+		logger:    config.Logger,
 	}
 
 	return r, nil
@@ -33,4 +40,13 @@ func New(config Config) (*Resource, error) {
 
 func (r *Resource) Name() string {
 	return Name
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
