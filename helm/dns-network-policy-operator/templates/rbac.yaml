@@ -9,10 +9,7 @@ metadata:
 rules:
 - apiGroups: ["example.giantswarm.io"]
   resources: ["dnsnetworkpolicies"]
-  verbs: ["get","watch","list"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get","watch","list"]
+  verbs: ["*"]
 - apiGroups: ["extensions", "networking.k8s.io"]
   resources: ["networkpolicies"]
   verbs: ["*"]
