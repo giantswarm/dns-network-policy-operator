@@ -22,19 +22,14 @@ func (r *Resource) EnsureDeleted(ctx context.Context, obj interface{}) error {
 		return microerror.Mask(err)
 	}
 
-	// Restore egress policy
-	if targetNetworkPolicy.ObjectMeta.Annotations == nil {
-		return nil
-	}
-	if _, ok := targetNetworkPolicy.ObjectMeta.Annotations[key.AnnotationRestoreEgress]; ok {
-		if targetNetworkPolicy.ObjectMeta.Annotations[key.AnnotationRestoreEgress] == "true" {
-			delete(targetNetworkPolicy.ObjectMeta.Annotations, key.AnnotationRestoreEgress)
-			targetNetworkPolicy.Spec.PolicyTypes = remove(targetNetworkPolicy.Spec.PolicyTypes, key.PolicyTypeEgress)
-		}
-	}
+	// delete random matcher
 
-	// Delete annotation from the target network policy
+	// Delete annotations from the target network policy
 	delete(targetNetworkPolicy.ObjectMeta.Annotations, key.AnnotationManagedBy)
+	delete(targetNetworkPolicy.ObjectMeta.Annotations, key.AnnotationNetworkPolicyRole)
+
+	// Delete random match label
+	delete(targetNetworkPolicy.Spec.PodSelector.MatchLabels, key.PodSelectorMatchLabelRandom)
 
 	// Update target network policy
 	_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Update(targetNetworkPolicy)
@@ -42,10 +37,17 @@ func (r *Resource) EnsureDeleted(ctx context.Context, obj interface{}) error {
 		return microerror.Mask(err)
 	}
 
+	// Delete effectve network policy
+	effectiveNetworkPolicyName := key.EffectiveNetworkPolicyName(targetNetworkPolicy.Name)
+	err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Delete(effectiveNetworkPolicyName, &metav1.DeleteOptions{})
+	if err != nil {
+		return microerror.Mask(err)
+	}
+
 	return nil
 }
 
-func remove(s []networkingV1.PolicyType, r networkingV1.PolicyType) []networkingV1.PolicyType {
+func removePolicyType(s []networkingV1.PolicyType, r networkingV1.PolicyType) []networkingV1.PolicyType {
 	for i, v := range s {
 		if v == r {
 			return append(s[:i], s[i+1:]...)

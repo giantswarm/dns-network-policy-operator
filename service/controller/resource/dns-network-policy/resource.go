@@ -1,8 +1,6 @@
 package test
 
 import (
-	"net"
-
 	"github.com/giantswarm/k8sclient"
 	"github.com/giantswarm/microerror"
 	"github.com/giantswarm/micrologger"
@@ -51,8 +49,4 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
-}
-
-func resolveDomain(domain string) []net.IP {
-	return nil
 }
