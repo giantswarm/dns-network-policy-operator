@@ -40,4 +40,4 @@ it is duplicated into new network policy with `<target network policy name>-acti
 
 ## Samples
 
-You can find more samples in [samples](doc/README.md).
+You can find more samples in [samples](docs/README.md).
