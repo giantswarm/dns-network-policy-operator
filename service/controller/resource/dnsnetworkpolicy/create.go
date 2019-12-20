@@ -61,44 +61,49 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 		effectiveNetworkPolicy.Spec.PolicyTypes = append(effectiveNetworkPolicy.Spec.PolicyTypes, key.PolicyTypeEgress)
 	}
 
-	// Resolve domains into IP addresses
-	ipChan := make(chan net.IP, 1)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go resolveDomains(cr.Spec.Domains, &wg, ipChan, r.resolver.RoundRobinAttempts)
-	wg.Add(1)
-	uniqueIPs := collectResult(&wg, ipChan)
-	wg.Wait()
+	if len(cr.Spec.Domains) > 0 {
 
-	var desiredNetworkPolicyPeers []networkingV1.NetworkPolicyPeer
-	{
-		for _, cidr := range uniqueIPs {
-			desiredNetworkPolicyPeer := networkingV1.NetworkPolicyPeer{
-				IPBlock: &networkingV1.IPBlock{
-					CIDR: cidr,
-				},
+		// Resolve domains into IP addresses
+		ipChan := make(chan net.IP, 1)
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go resolveDomains(cr.Spec.Domains, &wg, ipChan, r.resolver.RoundRobinAttempts)
+		wg.Add(1)
+		uniqueIPs := collectResult(&wg, ipChan)
+		wg.Wait()
+
+		var desiredNetworkPolicyPeers []networkingV1.NetworkPolicyPeer
+		{
+			for _, cidr := range uniqueIPs {
+				desiredNetworkPolicyPeer := networkingV1.NetworkPolicyPeer{
+					IPBlock: &networkingV1.IPBlock{
+						CIDR: cidr,
+					},
+				}
+				desiredNetworkPolicyPeers = append(desiredNetworkPolicyPeers, desiredNetworkPolicyPeer)
 			}
-			desiredNetworkPolicyPeers = append(desiredNetworkPolicyPeers, desiredNetworkPolicyPeer)
 		}
-	}
-	dnsPolicyEgressRule := networkingV1.NetworkPolicyEgressRule{
-		To: desiredNetworkPolicyPeers,
-	}
-	effectiveNetworkPolicy.Spec.Egress = append(targetNetworkPolicy.Spec.Egress, dnsPolicyEgressRule)
+		dnsPolicyEgressRule := networkingV1.NetworkPolicyEgressRule{
+			To: desiredNetworkPolicyPeers,
+		}
+		effectiveNetworkPolicy.Spec.Egress = append(targetNetworkPolicy.Spec.Egress, dnsPolicyEgressRule)
 
-	if targetNetworkPolicy.Spec.PodSelector.MatchLabels == nil {
-		targetNetworkPolicy.Spec.PodSelector.MatchLabels = make(map[string]string)
-	}
-	targetNetworkPolicy.Spec.PodSelector.MatchLabels[key.PodSelectorMatchLabelRandom] = key.RandomLabel()
+		if targetNetworkPolicy.Spec.PodSelector.MatchLabels == nil {
+			targetNetworkPolicy.Spec.PodSelector.MatchLabels = make(map[string]string)
+		}
+		targetNetworkPolicy.Spec.PodSelector.MatchLabels[key.PodSelectorMatchLabelRandom] = key.RandomLabel()
 
-	_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Get(effectiveNetworkPolicyName, metav1.GetOptions{})
-	if apierrors.IsNotFound(err) {
-		_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Create(effectiveNetworkPolicy)
-		if err != nil {
+		_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Get(effectiveNetworkPolicyName, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Create(effectiveNetworkPolicy)
+			if err != nil {
+				return microerror.Mask(err)
+			}
+		} else if err != nil {
 			return microerror.Mask(err)
 		}
-	} else if err != nil {
-		return microerror.Mask(err)
+	} else {
+		r.logger.LogCtx(ctx, "level", "debug", "message", "no domains found")
 	}
 
 	_, err = r.k8sClient.NetworkingV1().NetworkPolicies(ns).Update(effectiveNetworkPolicy)
