@@ -2,11 +2,11 @@
 
 # dns-network-policy-operator
 
-This `dns-network-policy-operator` manages Kubernetes network policies with dns-based egress rules support.
+This `dns-network-policy-operator` manages Kubernetes network policies with DNS-based egress rules support.
 
 ## Architecture
 
-The operator uses our operatorkit framework. It manages an `dnsnetworkpolicy` CRD using a generated client stored in our apiextensions repo.
+The operator uses our operatorkit framework. It manages a `dnsnetworkpolicy` CRD using a generated client stored in our apiextensions repo.
 
 Basic DNS network policy may look like:
 
