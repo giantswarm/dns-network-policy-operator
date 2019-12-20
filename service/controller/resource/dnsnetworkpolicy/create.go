@@ -19,6 +19,11 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 		return microerror.Mask(err)
 	}
 
+	if len(cr.Spec.Domains) == 0 {
+		r.logger.LogCtx(ctx, "level", "debug", "message", "no domains found")
+		return nil
+	}
+
 	ns := cr.ObjectMeta.Namespace
 	targetNetworkPolicyName := cr.Spec.TargetNetworkPolicy
 	targetNetworkPolicy, err := r.k8sClient.NetworkingV1().NetworkPolicies(ns).Get(targetNetworkPolicyName, metav1.GetOptions{})
