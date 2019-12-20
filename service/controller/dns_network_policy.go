@@ -23,7 +23,6 @@ type DNSNetworkPolicyConfig struct {
 
 type DNSNetworkPolicy struct {
 	*controller.Controller
-	Resolver dnsnetworkpolicy.Resolver
 }
 
 func NewDNSNetworkPolicy(config DNSNetworkPolicyConfig) (*DNSNetworkPolicy, error) {
@@ -56,7 +55,6 @@ func NewDNSNetworkPolicy(config DNSNetworkPolicyConfig) (*DNSNetworkPolicy, erro
 
 	c := &DNSNetworkPolicy{
 		Controller: operatorkitController,
-		Resolver:   config.Resolver,
 	}
 
 	return c, nil
@@ -70,6 +68,8 @@ func newDNSNetworkPolicyResourceSets(config DNSNetworkPolicyConfig) ([]*controll
 		c := DNSNetworkPolicyResourceSetConfig{
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
+
+			Resolver: config.Resolver,
 		}
 
 		resourceSet, err = newDNSNetworkPolicyResourceSet(c)

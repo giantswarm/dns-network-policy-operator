@@ -15,6 +15,8 @@ import (
 type DNSNetworkPolicyResourceSetConfig struct {
 	K8sClient k8sclient.Interface
 	Logger    micrologger.Logger
+
+	Resolver dnp.Resolver
 }
 
 func newDNSNetworkPolicyResourceSet(config DNSNetworkPolicyResourceSetConfig) (*controller.ResourceSet, error) {
@@ -25,6 +27,8 @@ func newDNSNetworkPolicyResourceSet(config DNSNetworkPolicyResourceSetConfig) (*
 		c := dnp.Config{
 			K8sClient: config.K8sClient,
 			Logger:    config.Logger,
+
+			Resolver: config.Resolver,
 		}
 
 		dnpResource, err = dnp.New(c)
