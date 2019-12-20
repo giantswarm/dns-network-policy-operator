@@ -15,11 +15,19 @@ const (
 type Config struct {
 	K8sClient k8sclient.Interface
 	Logger    micrologger.Logger
+
+	Resolver Resolver
 }
 
 type Resource struct {
 	k8sClient kubernetes.Interface
 	logger    micrologger.Logger
+
+	resolver Resolver
+}
+
+type Resolver struct {
+	RoundRobinAttempts int
 }
 
 func New(config Config) (*Resource, error) {
@@ -33,6 +41,7 @@ func New(config Config) (*Resource, error) {
 	r := &Resource{
 		k8sClient: config.K8sClient.K8sClient(),
 		logger:    config.Logger,
+		resolver:  config.Resolver,
 	}
 
 	return r, nil

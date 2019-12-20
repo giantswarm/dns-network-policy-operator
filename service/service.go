@@ -20,6 +20,7 @@ import (
 	"github.com/giantswarm/dns-network-policy-operator/pkg/project"
 	"github.com/giantswarm/dns-network-policy-operator/service/collector"
 	"github.com/giantswarm/dns-network-policy-operator/service/controller"
+	"github.com/giantswarm/dns-network-policy-operator/service/controller/resource/dnsnetworkpolicy"
 )
 
 // Config represents the configuration used to create a new service.
@@ -104,6 +105,10 @@ func New(config Config) (*Service, error) {
 		c := controller.DNSNetworkPolicyConfig{
 			K8sClient: k8sClient,
 			Logger:    config.Logger,
+
+			Resolver: dnsnetworkpolicy.Resolver{
+				RoundRobinAttempts: config.Viper.GetInt(config.Flag.Service.Resolver.RoundRobinAttempts),
+			},
 		}
 
 		dnsNetworkPolicyController, err = controller.NewDNSNetworkPolicy(c)
