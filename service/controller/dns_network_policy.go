@@ -10,15 +10,20 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/giantswarm/dns-network-policy-operator/pkg/project"
+	"github.com/giantswarm/dns-network-policy-operator/service/controller/resource/dnsnetworkpolicy"
 )
 
 type DNSNetworkPolicyConfig struct {
 	K8sClient k8sclient.Interface
 	Logger    micrologger.Logger
+
+	// resolver settings
+	Resolver dnsnetworkpolicy.Resolver
 }
 
 type DNSNetworkPolicy struct {
 	*controller.Controller
+	Resolver dnsnetworkpolicy.Resolver
 }
 
 func NewDNSNetworkPolicy(config DNSNetworkPolicyConfig) (*DNSNetworkPolicy, error) {
@@ -51,6 +56,7 @@ func NewDNSNetworkPolicy(config DNSNetworkPolicyConfig) (*DNSNetworkPolicy, erro
 
 	c := &DNSNetworkPolicy{
 		Controller: operatorkitController,
+		Resolver:   config.Resolver,
 	}
 
 	return c, nil

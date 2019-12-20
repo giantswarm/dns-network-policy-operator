@@ -65,7 +65,7 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 	ipChan := make(chan net.IP, 1)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	go resolveDomains(cr.Spec.Domains, &wg, ipChan)
+	go resolveDomains(cr.Spec.Domains, &wg, ipChan, r.resolver.RoundRobinAttempts)
 	wg.Add(1)
 	uniqueIPs := collectResult(&wg, ipChan)
 	wg.Wait()

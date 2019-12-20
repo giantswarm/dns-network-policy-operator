@@ -9,7 +9,7 @@ import (
 	"github.com/giantswarm/operatorkit/resource/wrapper/metricsresource"
 	"github.com/giantswarm/operatorkit/resource/wrapper/retryresource"
 
-	dnp "github.com/giantswarm/dns-network-policy-operator/service/controller/resource/dns-network-policy"
+	dnp "github.com/giantswarm/dns-network-policy-operator/service/controller/resource/dnsnetworkpolicy"
 )
 
 type DNSNetworkPolicyResourceSetConfig struct {

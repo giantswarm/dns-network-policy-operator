@@ -6,23 +6,22 @@ import (
 	"sync"
 )
 
-func resolveDomains(domains []string, wg *sync.WaitGroup, ch chan net.IP) {
+func resolveDomains(domains []string, wg *sync.WaitGroup, ch chan net.IP, resolveAttempts int) {
 	defer wg.Done()
 
 	defer close(ch)
 	var w sync.WaitGroup
 	for _, domain := range domains {
 		w.Add(1)
-		go resolveDomain(&w, domain, ch)
+		go resolveDomain(&w, domain, ch, resolveAttempts)
 	}
 	w.Wait()
 }
 
-func resolveDomain(wg *sync.WaitGroup, domain string, ch chan net.IP) {
+func resolveDomain(wg *sync.WaitGroup, domain string, ch chan net.IP, resolveAttempts int) {
 	var desiredIPs []net.IP
 	defer wg.Done()
 
-	resolveAttempts := 10
 	for i := 1; i <= resolveAttempts; i++ {
 
 		currentIPs, err := net.LookupIP(domain)
