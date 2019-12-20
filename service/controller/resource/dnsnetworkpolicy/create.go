@@ -61,7 +61,7 @@ func (r *Resource) EnsureCreated(ctx context.Context, obj interface{}) error {
 		effectiveNetworkPolicy.Spec.PolicyTypes = append(effectiveNetworkPolicy.Spec.PolicyTypes, key.PolicyTypeEgress)
 	}
 
-	if len(cr.Spec.Domains) >= 0 {
+	if len(cr.Spec.Domains) > 0 {
 
 		// Resolve domains into IP addresses
 		ipChan := make(chan net.IP, 1)
