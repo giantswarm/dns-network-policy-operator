@@ -1,3 +1,4 @@
 apiVersion: v1
 name: dns-network-policy-operator
 version: [[ .Version ]]
+appVersion: [[ .Version ]]
