@@ -20,7 +20,7 @@ spec:
         app: {{ .Values.project.name }}
         version: {{ .Values.project.version }}
       annotations:
-        releasetime: {{ $.Release.Time }}
+        releasetime: {{ now }}
     spec:
       affinity:
         podAntiAffinity:
