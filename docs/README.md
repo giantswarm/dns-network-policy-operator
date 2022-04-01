@@ -44,7 +44,7 @@ spec:
 This policy allows an egress traffic to the DNS service only.
 
 ```
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy                                                                                                
 metadata:      
   name: example
@@ -87,7 +87,7 @@ After CR is created, `dns-network-policy-operator` resolves the listed domain an
 ```
 kubectl get networkpolicies example-active -o yaml
 
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy                                 
 metadata:     
   annotations:                    
